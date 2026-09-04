@@ -21,6 +21,8 @@ import IncidentMap from '@/components/map/IncidentMap';
 import { sahayataStore, AppState } from '@/lib/store';
 import { PersonReport, CoTravelerGroup, NDRFUnit } from '@/lib/types';
 import { matchPatientPhoto, FaceMatchResult } from '@/lib/ai/faceMatcher';
+import { useAuth } from '@/lib/auth/AuthContext';
+import ClearanceGate from '@/components/auth/ClearanceGate';
 
 interface DashboardProps {
   params: { locale: string };
@@ -29,6 +31,7 @@ interface DashboardProps {
 export default function AuthorityDashboard({ params: { locale } }: DashboardProps) {
   const t = useTranslations('dashboard');
   const common = useTranslations('common');
+  const { isAuthenticated, user, isCommander, isLoading: authLoading } = useAuth();
 
   const [state, setState] = useState<AppState>(sahayataStore.getState());
   const [activeTab, setActiveTab] = useState<'map' | 'priority' | 'groups' | 'registry' | 'face'>('map');
@@ -68,32 +71,67 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
     }, 350);
   };
 
-  const handleVerifySafe = (reportId: string, location: string) => {
+  const handleVerifySafe = async (reportId: string, location: string) => {
+    const officerSignature = user ? `${user.rank} ${user.name}` : 'Commandant S. Rawat (8th Bn NDRF)';
+    try {
+      await fetch('/api/verify-safe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId, location })
+      });
+    } catch (e) {
+      console.warn('Verify-safe API call failed:', e);
+    }
     sahayataStore.updateReportStatus(
       reportId,
       'located_safe',
       location,
-      'Commander S. Rawat (NDRF HQ)'
+      officerSignature
     );
     setVerifyModalReport(null);
   };
 
-  const handleDispatch = (reportId: string, unitId: string) => {
+  const handleDispatch = async (reportId: string, unitId: string) => {
+    try {
+      await fetch('/api/dispatch', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reportId, unitId })
+      });
+    } catch (e) {
+      console.warn('Dispatch API call failed:', e);
+    }
     sahayataStore.assignNDRFUnit(reportId, unitId);
     setAssignModalReport(null);
   };
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <ClearanceGate
+          title="NDRF Tactical Operations Center (EOC)"
+          subtitle="Restricted operational terminal for 8th Battalion Incident Command, real-time QRT battalion dispatch, and automated GIS triage."
+          facilityName="Tatopani Forward Command Sector"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* 1. Header Bar */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-[rgba(0,26,16,0.08)] pb-6">
         <div>
-          <div className="flex items-center gap-2 mb-1.5">
+          <div className="flex flex-wrap items-center gap-2 mb-1.5">
             <span className="font-mono text-[11px] font-medium text-[#001A10] bg-[#A9F1CA] px-2.5 py-0.5 rounded-[9999px] border border-[rgba(0,26,16,0.08)]">
               ACTIVE HADR OPERATION
             </span>
             <span className="text-xs font-mono text-[#001A10]/60">
               {state.incident.id}
+            </span>
+            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#00482F] bg-[#3ECF8E]/20 px-2 py-0.5 rounded-[6px] border border-[#3ECF8E]/40">
+              <Shield className="h-3 w-3 text-[#00A85A]" />
+              Clearance: {user?.name || '8th Bn Commander'}
             </span>
           </div>
           <h1 className="font-display text-3xl font-semibold text-[#001A10] tracking-normal">

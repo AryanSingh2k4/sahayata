@@ -9,10 +9,16 @@ import {
   CheckCircle2,
   Building,
   Shield,
-  HelpCircle
+  HelpCircle,
+  Phone,
+  Lock,
+  Eye,
+  KeyRound
 } from 'lucide-react';
 import { sahayataStore } from '@/lib/store';
 import { PersonReport } from '@/lib/types';
+import { useAuth } from '@/lib/auth/AuthContext';
+import { maskPhoneNumber, sanitizeShelterLocation } from '@/lib/auth/roles';
 
 interface TrackPageProps {
   params: { locale: string };
@@ -24,6 +30,7 @@ export default function TrackPage({ params: { locale } }: TrackPageProps) {
   const searchParams = useSearchParams();
   const initialCaseId = searchParams.get('caseId') || 'SAH-2026-001458';
 
+  const { isAuthenticated, user, openClearanceModal } = useAuth();
   const [queryId, setQueryId] = useState(initialCaseId);
   const [report, setReport] = useState<PersonReport | null>(null);
   const [searched, setSearched] = useState(false);
@@ -257,6 +264,66 @@ export default function TrackPage({ params: { locale } }: TrackPageProps) {
             </div>
           )}
 
+          {/* Primary Reporter & Emergency Contact Telemetry (PII Masked in Citizen View) */}
+          <div className={`rounded-[8px] border p-4 space-y-2.5 ${
+            isAuthenticated
+              ? 'border-[#6DD9A8] bg-[#A9F1CA]/20'
+              : 'border-[rgba(0,26,16,0.12)] bg-[#F8F3EF]/70'
+          }`}>
+            <div className="flex flex-wrap items-center justify-between gap-2">
+              <span className={`font-mono text-[10px] uppercase font-bold flex items-center gap-1.5 ${
+                isAuthenticated ? 'text-[#00482F]' : 'text-[#001A10]/70'
+              }`}>
+                {isAuthenticated ? (
+                  <>
+                    <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
+                    NDRF Commander Clearance Active • Unredacted Telemetry
+                  </>
+                ) : (
+                  <>
+                    <Lock className="h-3.5 w-3.5 text-[#00A85A]" />
+                    DPDP Act 2023 Data Protection • PII Masked
+                  </>
+                )}
+              </span>
+              {!isAuthenticated && (
+                <button
+                  onClick={openClearanceModal}
+                  className="font-mono text-[10px] text-[#00A85A] hover:underline flex items-center gap-1"
+                >
+                  <KeyRound className="h-3 w-3" />
+                  Official NDRF Clearance Login
+                </button>
+              )}
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-xs pt-1">
+              <div>
+                <span className="text-[#001A10]/60 block font-mono text-[10px] uppercase">Primary Reporter</span>
+                <span className="font-semibold text-[#001A10]">{report.reporterName}</span>
+                <span className="text-[#001A10]/60 ml-1.5">({report.reporterRelationship})</span>
+              </div>
+              <div>
+                <span className="text-[#001A10]/60 block font-mono text-[10px] uppercase">Emergency Contact</span>
+                <div className="flex items-center gap-2 mt-0.5">
+                  <Phone className="h-3.5 w-3.5 text-[#00A85A]" />
+                  <span className="font-mono font-medium text-[#001A10]">
+                    {maskPhoneNumber(report.reporterPhone, isAuthenticated ? 'ROLE_NDRF_OFFICIAL' : 'ROLE_CITIZEN')}
+                  </span>
+                  {isAuthenticated ? (
+                    <span className="text-[9px] font-mono bg-[#00482F] text-white px-1.5 py-0.5 rounded-[4px]">
+                      VERIFIED OFFICER VIEW
+                    </span>
+                  ) : (
+                    <span className="text-[9px] font-mono bg-[rgba(0,26,16,0.08)] text-[#001A10]/60 px-1.5 py-0.5 rounded-[4px]">
+                      PROTECTED
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+
           {report.safeDiscloseLocation && (
             <div className="rounded-[8px] border border-[#6DD9A8] bg-[#A9F1CA]/20 p-4 flex items-start gap-3">
               <Building className="h-4 w-4 text-[#00A85A] shrink-0 mt-0.5" />
@@ -265,7 +332,7 @@ export default function TrackPage({ params: { locale } }: TrackPageProps) {
                   Verified Safe Facility Location
                 </div>
                 <div className="text-sm font-bold text-[#001A10] mt-0.5">
-                  {report.safeDiscloseLocation}
+                  {sanitizeShelterLocation(report.safeDiscloseLocation, isAuthenticated ? 'ROLE_NDRF_OFFICIAL' : 'ROLE_CITIZEN')}
                 </div>
                 <div className="text-xs text-[#001A10]/70 mt-1">
                   Verified by: {report.verifiedBy} ({report.verifiedAt ? new Date(report.verifiedAt).toLocaleTimeString() : 'Recent'})

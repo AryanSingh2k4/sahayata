@@ -3,6 +3,8 @@ import { NextIntlClientProvider } from 'next-intl';
 import { getMessages } from 'next-intl/server';
 import '../globals.css';
 import Header from '@/components/Header';
+import { AuthProvider } from '@/lib/auth/AuthContext';
+import ClearanceModal from '@/components/auth/ClearanceModal';
 
 export const metadata = {
   title: 'SAHAYATA — National Disaster Victim Tracing & Rescue Intelligence',
@@ -31,8 +33,11 @@ export default async function LocaleLayout({
       </head>
       <body className="min-h-screen flex flex-col bg-[#F8F3EF] text-[#001A10] font-sans antialiased" suppressHydrationWarning>
         <NextIntlClientProvider messages={messages}>
-          <Header locale={locale} />
-          <main className="flex-1 pb-12">{children}</main>
+          <AuthProvider>
+            <Header locale={locale} />
+            <main className="flex-1 pb-12">{children}</main>
+            <ClearanceModal />
+          </AuthProvider>
         </NextIntlClientProvider>
       </body>
     </html>

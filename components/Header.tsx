@@ -4,7 +4,8 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { useTranslations } from 'next-intl';
-import { LifeBuoy } from 'lucide-react';
+import { LifeBuoy, Lock, Shield, LogOut } from 'lucide-react';
+import { useAuth } from '@/lib/auth/AuthContext';
 
 interface HeaderProps {
   locale: string;
@@ -14,6 +15,7 @@ export default function Header({ locale }: HeaderProps) {
   const nav = useTranslations('nav');
   const pathname = usePathname();
   const router = useRouter();
+  const { isAuthenticated, user, logout, openClearanceModal } = useAuth();
 
   const getLocalizedPath = (targetLocale: string) => {
     if (!pathname) return `/${targetLocale}`;
@@ -52,7 +54,7 @@ export default function Header({ locale }: HeaderProps) {
         </div>
 
         {/* Center Nav Links */}
-        <nav className="hidden md:flex items-center gap-6 text-[14px] font-[450] text-[#001A10]">
+        <nav className="hidden md:flex items-center gap-5 text-[14px] font-[450] text-[#001A10]">
           <Link
             href={`/${locale}`}
             className={`transition-colors ${
@@ -77,24 +79,26 @@ export default function Header({ locale }: HeaderProps) {
 
           <Link
             href={`/${locale}/dashboard`}
-            className={`px-3 py-1.5 rounded-[8px] transition-colors ${
+            className={`px-3 py-1.5 rounded-[8px] transition-colors flex items-center gap-1.5 ${
               isActive('/dashboard')
                 ? 'bg-[#001A10] text-[#FFFFFF] font-[500]'
                 : 'hover:text-[#00A85A]'
             }`}
           >
-            {nav('authorityDashboard')}
+            {!isAuthenticated && <Lock className="h-3 w-3 opacity-50" />}
+            <span>{nav('authorityDashboard')}</span>
           </Link>
 
           <Link
             href={`/${locale}/field`}
-            className={`transition-colors ${
+            className={`transition-colors flex items-center gap-1.5 ${
               isActive('/field')
                 ? 'text-[#00A85A] font-[500]'
                 : 'hover:text-[#00A85A]'
             }`}
           >
-            {nav('fieldMode')}
+            {!isAuthenticated && <Lock className="h-3 w-3 opacity-50" />}
+            <span>{nav('fieldMode')}</span>
           </Link>
 
           <Link
@@ -109,8 +113,33 @@ export default function Header({ locale }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Right: Language Pill */}
-        <div className="flex items-center gap-2">
+        {/* Right: Auth Clearance Badge & Language Pill */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {isAuthenticated ? (
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[8px] border border-[#6DD9A8] bg-[#A9F1CA]/30 text-xs font-mono text-[#00482F]">
+              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
+              <span className="font-semibold hidden lg:inline">{user?.name || '8th Bn NDRF'}</span>
+              <span className="font-semibold lg:hidden">8th Bn NDRF</span>
+              <button
+                onClick={logout}
+                title="Revoke clearance and return to Citizen View"
+                className="ml-1 text-[11px] text-[#001A10]/60 hover:text-rose-600 underline font-sans"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={openClearanceModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#001A10] text-[#FFFFFF] text-xs font-mono font-medium hover:bg-[#002819] transition-all shadow-none"
+            >
+              <Lock className="h-3 w-3 text-[#3ECF8E]" />
+              <span className="hidden sm:inline">NDRF Login</span>
+              <span className="sm:hidden">Login</span>
+            </button>
+          )}
+
+          {/* Language Pill */}
           <div className="inline-flex rounded-[8px] border border-[rgba(0,26,16,0.12)] bg-[#F8F3EF] p-0.5 text-xs font-mono">
             <button
               onClick={() => handleLanguageSwitch('en')}
@@ -156,19 +185,21 @@ export default function Header({ locale }: HeaderProps) {
         </Link>
         <Link
           href={`/${locale}/dashboard`}
-          className={`px-2.5 py-1 rounded-[6px] whitespace-nowrap ${
+          className={`px-2.5 py-1 rounded-[6px] whitespace-nowrap flex items-center gap-1 ${
             isActive('/dashboard') ? 'bg-[#001A10] text-white font-medium' : 'text-[#001A10]/70'
           }`}
         >
-          {nav('authorityDashboard')}
+          {!isAuthenticated && <Lock className="h-3 w-3 opacity-50" />}
+          <span>{nav('authorityDashboard')}</span>
         </Link>
         <Link
           href={`/${locale}/field`}
-          className={`px-2.5 py-1 rounded-[6px] whitespace-nowrap ${
+          className={`px-2.5 py-1 rounded-[6px] whitespace-nowrap flex items-center gap-1 ${
             isActive('/field') ? 'bg-[#3ECF8E] text-[#001A10] font-medium' : 'text-[#001A10]/70'
           }`}
         >
-          {nav('fieldMode')}
+          {!isAuthenticated && <Lock className="h-3 w-3 opacity-50" />}
+          <span>{nav('fieldMode')}</span>
         </Link>
         <Link
           href={`/${locale}/track`}

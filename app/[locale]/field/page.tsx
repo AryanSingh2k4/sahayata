@@ -15,6 +15,8 @@ import {
 import { sahayataStore } from '@/lib/store';
 import { offlineDb } from '@/lib/offline/dexieDb';
 import { useLiveQuery } from 'dexie-react-hooks';
+import { useAuth } from '@/lib/auth/AuthContext';
+import ClearanceGate from '@/components/auth/ClearanceGate';
 
 interface FieldPageProps {
   params: { locale: string };
@@ -23,6 +25,7 @@ interface FieldPageProps {
 export default function FieldTeamPage({ params: { locale } }: FieldPageProps) {
   const t = useTranslations('field');
   const common = useTranslations('common');
+  const { isAuthenticated, user, isLoading: authLoading } = useAuth();
 
   const [isOnline, setIsOnline] = useState(false);
   const [activeForm, setActiveForm] = useState<'none' | 'register' | 'sighting' | 'qr'>('none');
@@ -145,6 +148,18 @@ export default function FieldTeamPage({ params: { locale } }: FieldPageProps) {
       showFeedback('All offline records synchronized to the central NDRF Incident Command database!');
     }, 500);
   };
+
+  if (!authLoading && !isAuthenticated) {
+    return (
+      <div className="max-w-xl mx-auto px-4 py-8">
+        <ClearanceGate
+          title="Tactical Field Responder Terminal"
+          subtitle="Offline incident triage and victim sighting terminal restricted to on-ground NDRF search and rescue units."
+          facilityName="Sector Bhotekoshi Ground Unit"
+        />
+      </div>
+    );
+  }
 
   return (
     <div className="max-w-xl mx-auto px-4 py-12 space-y-5">
