@@ -20,6 +20,7 @@ import {
 } from './seedData';
 import { calculatePriorityScore } from './ai/priorityTriage';
 import { OCRScanResult } from './ai/ocrManifest';
+import { supabase } from './supabaseClient';
 
 const STORAGE_KEY = 'sahayata_live_state_v1';
 
@@ -64,7 +65,7 @@ function notify() {
 export const sahayataStore = {
   getState: () => currentState,
 
-  initClient: () => {
+  initClient: async () => {
     if (typeof window !== 'undefined') {
       try {
         const saved = localStorage.getItem(STORAGE_KEY);
@@ -74,6 +75,91 @@ export const sahayataStore = {
         }
       } catch (e) {
         console.warn('Could not read state from localStorage', e);
+      }
+
+      // Background Cloud Sync with Supabase
+      try {
+        const [entriesRes, reportsRes] = await Promise.all([
+          supabase.from('pre_disaster_entries').select('*'),
+          supabase.from('person_reports').select('*')
+        ]);
+
+        let hasUpdates = false;
+
+        if (entriesRes.data && entriesRes.data.length > 0) {
+          const mappedEntries: PreDisasterEntry[] = entriesRes.data.map(e => ({
+            id: e.id,
+            groupName: e.group_name,
+            groupType: e.group_type,
+            leaderName: e.leader_name,
+            leaderPhone: e.leader_phone,
+            totalMembers: e.total_members,
+            permitNumber: e.permit_number,
+            vehicleNumber: e.vehicle_number,
+            entryCheckpoint: e.entry_checkpoint,
+            exitCheckpoint: e.exit_checkpoint,
+            entryTime: e.entry_time,
+            expectedExitTime: e.expected_exit_time,
+            actualExitTime: e.actual_exit_time,
+            status: e.status,
+            members: e.members || []
+          }));
+
+          const existingIds = new Set(mappedEntries.map(e => e.id));
+          const localOnly = currentState.preDisasterEntries.filter(e => !existingIds.has(e.id));
+          currentState.preDisasterEntries = [...mappedEntries, ...localOnly];
+          hasUpdates = true;
+        }
+
+        if (reportsRes.data && reportsRes.data.length > 0) {
+          const mappedReports: PersonReport[] = reportsRes.data.map(r => ({
+            id: r.id,
+            incidentId: r.incident_id,
+            fullName: r.full_name,
+            alternateSpelling: r.alternate_spelling,
+            approxAge: r.approx_age,
+            gender: r.gender,
+            photoUrl: r.photo_url,
+            phone: r.phone,
+            clothing: r.clothing,
+            medicalConditions: r.medical_conditions,
+            specialRequirements: r.special_requirements,
+            lastKnownLocation: r.last_known_location,
+            coordinates: r.coordinates || currentState.incident.center,
+            lastContactTime: r.last_contact_time,
+            contactMethod: r.contact_method,
+            groupType: r.group_type,
+            groupName: r.group_name,
+            permitNumber: r.permit_number,
+            inferredGroupId: r.inferred_group_id,
+            reporterName: r.reporter_name,
+            reporterPhone: r.reporter_phone,
+            reporterRelationship: r.reporter_relationship,
+            preferredLanguage: r.preferred_language || 'en',
+            status: r.status,
+            priority: r.priority,
+            priorityScore: r.priority_score,
+            priorityFactors: r.priority_factors || [],
+            assignedTeamId: r.assigned_team_id,
+            verifiedBy: r.verified_by,
+            verifiedAt: r.verified_at,
+            safeDiscloseLocation: r.safe_disclose_location,
+            attachedDocument: r.attached_document,
+            createdAt: r.created_at,
+            updatedAt: r.updated_at
+          }));
+
+          const existingIds = new Set(mappedReports.map(r => r.id));
+          const localOnly = currentState.reports.filter(r => !existingIds.has(r.id));
+          currentState.reports = [...mappedReports, ...localOnly];
+          hasUpdates = true;
+        }
+
+        if (hasUpdates) {
+          notify();
+        }
+      } catch (cloudErr) {
+        // Fallback to local state if offline
       }
     }
   },
@@ -112,6 +198,28 @@ export const sahayataStore = {
       preDisasterEntries: [newEntry, ...currentState.preDisasterEntries]
     };
     notify();
+
+    // Async Cloud Sync to Supabase
+    supabase.from('pre_disaster_entries').insert({
+      id: newEntry.id,
+      group_name: newEntry.groupName,
+      group_type: newEntry.groupType,
+      leader_name: newEntry.leaderName,
+      leader_phone: newEntry.leaderPhone,
+      total_members: newEntry.totalMembers,
+      permit_number: newEntry.permitNumber,
+      vehicle_number: newEntry.vehicleNumber,
+      entry_checkpoint: newEntry.entryCheckpoint,
+      exit_checkpoint: newEntry.exitCheckpoint,
+      entry_time: newEntry.entryTime,
+      expected_exit_time: newEntry.expectedExitTime,
+      status: newEntry.status,
+      members: newEntry.members,
+      danger_zones: []
+    }).then(({ error }) => {
+      if (error) console.warn('Supabase pre-disaster insert note:', error.message);
+    });
+
     return newEntry;
   },
 
@@ -203,6 +311,35 @@ export const sahayataStore = {
       groups: updatedGroups
     };
     notify();
+
+    // Async Cloud Sync to Supabase
+    supabase.from('person_reports').insert({
+      id: newReport.id,
+      incident_id: newReport.incidentId,
+      full_name: newReport.fullName,
+      approx_age: newReport.approxAge,
+      gender: newReport.gender,
+      clothing: newReport.clothing,
+      medical_conditions: newReport.medicalConditions,
+      last_known_location: newReport.lastKnownLocation,
+      coordinates: newReport.coordinates,
+      contact_method: newReport.contactMethod,
+      group_type: newReport.groupType,
+      group_name: newReport.groupName,
+      permit_number: newReport.permitNumber,
+      reporter_name: newReport.reporterName,
+      reporter_phone: newReport.reporterPhone,
+      reporter_relationship: newReport.reporterRelationship,
+      preferred_language: newReport.preferredLanguage,
+      status: newReport.status,
+      priority: newReport.priority,
+      priority_score: newReport.priorityScore,
+      priority_factors: newReport.priorityFactors,
+      attached_document: newReport.attachedDocument
+    }).then(({ error }) => {
+      if (error) console.warn('Supabase report sync note:', error.message);
+    });
+
     return newReport;
   },
 
@@ -238,6 +375,17 @@ export const sahayataStore = {
       }))
     };
     notify();
+
+    // Async Cloud Sync to Supabase
+    supabase.from('person_reports').update({
+      status: newStatus,
+      safe_disclose_location: safeLocation,
+      verified_by: verifiedBy || 'NDRF Verification Desk',
+      verified_at: new Date().toISOString(),
+      updated_at: new Date().toISOString()
+    }).eq('id', reportId).then(({ error }) => {
+      if (error) console.warn('Supabase report status update note:', error.message);
+    });
   },
 
   // Assign NDRF Unit
@@ -252,6 +400,23 @@ export const sahayataStore = {
       )
     };
     notify();
+
+    // Async Cloud Sync to Supabase
+    supabase.from('person_reports').update({
+      assigned_team_id: unitId,
+      status: 'search_lead_issued',
+      updated_at: new Date().toISOString()
+    }).eq('id', reportId).then(({ error }) => {
+      if (error) console.warn('Supabase report team assignment note:', error.message);
+    });
+
+    supabase.from('ndrf_units').update({
+      status: 'dispatched',
+      assigned_case_id: reportId,
+      updated_at: new Date().toISOString()
+    }).eq('id', unitId).then(({ error }) => {
+      if (error) console.warn('Supabase unit status update note:', error.message);
+    });
   },
 
   // OCR Document Reconciler (Reconciles existing + Adds new passengers)
