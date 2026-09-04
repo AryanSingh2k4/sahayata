@@ -14,7 +14,8 @@ interface AuthContextType {
   loginDemo: () => Promise<{ success: boolean; message?: string }>;
   logout: () => Promise<void>;
   isClearanceModalOpen: boolean;
-  openClearanceModal: () => void;
+  clearanceModalReason?: string | null;
+  openClearanceModal: (reason?: string | unknown) => void;
   closeClearanceModal: () => void;
 }
 
@@ -26,6 +27,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [permissions, setPermissions] = useState<PermissionClaim[]>(ROLE_PERMISSIONS.ROLE_CITIZEN);
   const [isLoading, setIsLoading] = useState(true);
   const [isClearanceModalOpen, setIsClearanceModalOpen] = useState(false);
+  const [clearanceModalReason, setClearanceModalReason] = useState<string | null>(null);
 
   // Hydrate session on mount
   useEffect(() => {
@@ -123,8 +125,15 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         loginDemo,
         logout,
         isClearanceModalOpen,
-        openClearanceModal: () => setIsClearanceModalOpen(true),
-        closeClearanceModal: () => setIsClearanceModalOpen(false)
+        clearanceModalReason,
+        openClearanceModal: (reason?: string | unknown) => {
+          setClearanceModalReason(typeof reason === 'string' ? reason : null);
+          setIsClearanceModalOpen(true);
+        },
+        closeClearanceModal: () => {
+          setClearanceModalReason(null);
+          setIsClearanceModalOpen(false);
+        }
       }}
     >
       {children}

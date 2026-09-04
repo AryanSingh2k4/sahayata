@@ -15,14 +15,15 @@ import {
   Activity,
   Send,
   UserCheck,
-  Download
+  Download,
+  Lock,
+  ArrowRight
 } from 'lucide-react';
 import IncidentMap from '@/components/map/IncidentMap';
 import { sahayataStore, AppState } from '@/lib/store';
 import { PersonReport, CoTravelerGroup, NDRFUnit } from '@/lib/types';
 import { matchPatientPhoto, FaceMatchResult } from '@/lib/ai/faceMatcher';
 import { useAuth } from '@/lib/auth/AuthContext';
-import ClearanceGate from '@/components/auth/ClearanceGate';
 
 interface DashboardProps {
   params: { locale: string };
@@ -31,7 +32,7 @@ interface DashboardProps {
 export default function AuthorityDashboard({ params: { locale } }: DashboardProps) {
   const t = useTranslations('dashboard');
   const common = useTranslations('common');
-  const { isAuthenticated, user, isCommander, isLoading: authLoading } = useAuth();
+  const { isAuthenticated, user, isCommander, isLoading: authLoading, openClearanceModal } = useAuth();
 
   const [state, setState] = useState<AppState>(sahayataStore.getState());
   const [activeTab, setActiveTab] = useState<'map' | 'priority' | 'groups' | 'registry' | 'face'>('map');
@@ -105,18 +106,6 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
     setAssignModalReport(null);
   };
 
-  if (!authLoading && !isAuthenticated) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <ClearanceGate
-          title="NDRF Tactical Operations Center (EOC)"
-          subtitle="Restricted operational terminal for 8th Battalion Incident Command, real-time QRT battalion dispatch, and automated GIS triage."
-          facilityName="Tatopani Forward Command Sector"
-        />
-      </div>
-    );
-  }
-
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
       {/* 1. Header Bar */}
@@ -129,10 +118,17 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
             <span className="text-xs font-mono text-[#001A10]/60">
               {state.incident.id}
             </span>
-            <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#00482F] bg-[#3ECF8E]/20 px-2 py-0.5 rounded-[6px] border border-[#3ECF8E]/40">
-              <Shield className="h-3 w-3 text-[#00A85A]" />
-              Clearance: {user?.name || '8th Bn Commander'}
-            </span>
+            {isAuthenticated ? (
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#00482F] bg-[#3ECF8E]/20 px-2 py-0.5 rounded-[6px] border border-[#3ECF8E]/40">
+                <Shield className="h-3 w-3 text-[#00A85A]" />
+                Clearance: {user?.name || '8th Bn Commander'}
+              </span>
+            ) : (
+              <span className="inline-flex items-center gap-1 font-mono text-[11px] text-[#001A10]/60 bg-[#F8F3EF] px-2 py-0.5 rounded-[6px] border border-[rgba(0,26,16,0.1)]">
+                <Lock className="h-3 w-3 text-[#00A85A]" />
+                Public Situational Awareness Mode
+              </span>
+            )}
           </div>
           <h1 className="font-display text-3xl font-semibold text-[#001A10] tracking-normal">
             {state.incident.name}
@@ -143,6 +139,15 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
         </div>
 
         <div className="flex items-center gap-2">
+          {!isAuthenticated && (
+            <button
+              onClick={openClearanceModal}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] bg-[#001A10] text-white text-xs font-medium hover:bg-[#002819] transition-all"
+            >
+              <Lock className="h-3.5 w-3.5 text-[#3ECF8E]" />
+              <span>NDRF Officer Login</span>
+            </button>
+          )}
           <button
             onClick={() => alert('Exporting official SITREP for National Disaster Management Authority...')}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-[8px] border border-[#001A10] bg-transparent text-[#001A10] text-sm font-medium hover:bg-[#001A10]/5 transition-colors"
@@ -152,6 +157,35 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
           </button>
         </div>
       </div>
+
+      {/* Public Awareness Ribbon (Rendered when unauthenticated) */}
+      {!isAuthenticated && (
+        <div className="rounded-[10px] border border-[rgba(0,26,16,0.1)] bg-white p-4 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 shadow-sm">
+          <div className="flex items-center gap-3">
+            <div className="h-9 w-9 rounded-[8px] bg-[#3ECF8E]/20 text-[#00482F] flex items-center justify-center shrink-0">
+              <Shield className="h-5 w-5 text-[#00A85A]" />
+            </div>
+            <div>
+              <div className="text-xs font-semibold text-[#001A10] flex items-center gap-2">
+                <span>Public Situational Awareness Mode</span>
+                <span className="font-mono text-[10px] bg-[#A9F1CA] text-[#00482F] px-1.5 py-0.5 rounded-[4px] font-bold">
+                  READ-ONLY TELEMETRY
+                </span>
+              </div>
+              <p className="text-xs text-[#001A10]/70 mt-0.5">
+                Civilian visitors can observe live hazard maps and rescue shelter metrics. Official military QRT dispatch is restricted to authorized NDRF commanders.
+              </p>
+            </div>
+          </div>
+          <button
+            onClick={openClearanceModal}
+            className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs hover:bg-[#6DD9A8] transition-all whitespace-nowrap shadow-none"
+          >
+            <span>Authenticate with Supabase</span>
+            <ArrowRight className="h-3.5 w-3.5" />
+          </button>
+        </div>
+      )}
 
       {/* 2. Supabase 4-Metric Grid (Cards: warm surface, 1px hairline, 12px radius, 0 shadow) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
@@ -307,14 +341,26 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
 
                 <div className="flex flex-col gap-2 pt-2">
                   <button
-                    onClick={() => setAssignModalReport(selectedReport)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        openClearanceModal('Officer authentication required to dispatch field rescue units.');
+                        return;
+                      }
+                      setAssignModalReport(selectedReport);
+                    }}
                     className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-[8px] bg-[#3ECF8E] text-[#001A10] font-medium text-xs hover:bg-[#6DD9A8] transition-colors"
                   >
                     <Send className="h-3.5 w-3.5" />
                     <span>Dispatch NDRF Team</span>
                   </button>
                   <button
-                    onClick={() => setVerifyModalReport(selectedReport)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        openClearanceModal('Officer authentication required to verify survivor status.');
+                        return;
+                      }
+                      setVerifyModalReport(selectedReport);
+                    }}
                     className="w-full inline-flex items-center justify-center gap-1.5 py-2.5 px-4 rounded-[8px] border border-[#001A10] bg-transparent text-[#001A10] font-medium text-xs hover:bg-[#001A10]/5 transition-colors"
                   >
                     <UserCheck className="h-3.5 w-3.5 text-[#00A85A]" />
@@ -437,13 +483,25 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
 
                 <div className="flex gap-2 pt-2">
                   <button
-                    onClick={() => setAssignModalReport(rep)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        openClearanceModal('Officer authentication required to dispatch field rescue units.');
+                        return;
+                      }
+                      setAssignModalReport(rep);
+                    }}
                     className="flex-1 py-2 px-3 rounded-[8px] bg-[#3ECF8E] text-[#001A10] font-medium text-xs hover:bg-[#6DD9A8] transition-colors"
                   >
                     Dispatch Team
                   </button>
                   <button
-                    onClick={() => setVerifyModalReport(rep)}
+                    onClick={() => {
+                      if (!isAuthenticated) {
+                        openClearanceModal('Officer authentication required to verify survivor status.');
+                        return;
+                      }
+                      setVerifyModalReport(rep);
+                    }}
                     className="flex-1 py-2 px-3 rounded-[8px] border border-[#001A10] bg-transparent text-[#001A10] font-medium text-xs hover:bg-[#001A10]/5 transition-colors"
                   >
                     Mark Verified Safe
@@ -607,13 +665,25 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
                       </td>
                       <td className="px-4 py-3 text-right space-x-2">
                         <button
-                          onClick={() => setVerifyModalReport(report)}
+                          onClick={() => {
+                            if (!isAuthenticated) {
+                              openClearanceModal('Officer authentication required to verify survivor status.');
+                              return;
+                            }
+                            setVerifyModalReport(report);
+                          }}
                           className="px-2.5 py-1 rounded-[6px] border border-[rgba(0,26,16,0.12)] bg-transparent hover:bg-[#001A10]/5 text-[#001A10] font-medium text-[11px]"
                         >
                           Verify
                         </button>
                         <button
-                          onClick={() => setAssignModalReport(report)}
+                          onClick={() => {
+                            if (!isAuthenticated) {
+                              openClearanceModal('Officer authentication required to dispatch field rescue units.');
+                              return;
+                            }
+                            setAssignModalReport(report);
+                          }}
                           className="px-2.5 py-1 rounded-[6px] bg-[#3ECF8E] hover:bg-[#6DD9A8] text-[#001A10] font-medium text-[11px]"
                         >
                           Dispatch
@@ -696,7 +766,13 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
                     </div>
 
                     <button
-                      onClick={() => handleVerifySafe(match.report.id, 'Tatopani Field Hospital - Ward A')}
+                      onClick={() => {
+                        if (!isAuthenticated) {
+                          openClearanceModal('Officer authentication required to verify survivor status.');
+                          return;
+                        }
+                        handleVerifySafe(match.report.id, 'Tatopani Field Hospital - Ward A');
+                      }}
                       className="px-4 py-2 rounded-[8px] bg-[#001A10] text-white text-xs font-medium hover:bg-[#001A10]/90 transition-colors whitespace-nowrap"
                     >
                       Verify Identity & Mark Safe

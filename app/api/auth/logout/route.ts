@@ -23,8 +23,21 @@ export async function POST() {
       }
     }
 
-    // Delete session cookie
-    cookieStore.delete(SESSION_COOKIE_NAME);
+    // Delete session cookie and Supabase access token
+    cookieStore.set(SESSION_COOKIE_NAME, '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0
+    });
+    cookieStore.set('sb_access_token', '', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'lax',
+      path: '/',
+      maxAge: 0
+    });
 
     return NextResponse.json({
       success: true,
