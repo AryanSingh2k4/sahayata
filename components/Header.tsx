@@ -79,9 +79,9 @@ export default function Header({ locale }: HeaderProps) {
 
           <Link
             href={`/${locale}/dashboard`}
-            className={`px-3 py-1.5 rounded-[8px] transition-colors flex items-center gap-1.5 ${
+            className={`transition-colors flex items-center gap-1.5 ${
               isActive('/dashboard')
-                ? 'bg-[#001A10] text-[#FFFFFF] font-[500]'
+                ? 'text-[#00A85A] font-[500]'
                 : 'hover:text-[#00A85A]'
             }`}
           >
@@ -113,32 +113,8 @@ export default function Header({ locale }: HeaderProps) {
           </Link>
         </nav>
 
-        {/* Right: Auth Clearance Badge & Language Pill */}
+        {/* Right: Language Pill & Auth Clearance Badge */}
         <div className="flex items-center gap-2 sm:gap-3">
-          {isAuthenticated ? (
-            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[8px] border border-[#6DD9A8] bg-[#A9F1CA]/30 text-xs font-mono text-[#00482F]">
-              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
-              <span className="font-semibold hidden lg:inline">{user?.name || '8th Bn NDRF'}</span>
-              <span className="font-semibold lg:hidden">8th Bn NDRF</span>
-              <button
-                onClick={logout}
-                title="Revoke clearance and return to Citizen View"
-                className="ml-1 text-[11px] text-[#001A10]/60 hover:text-rose-600 underline font-sans"
-              >
-                Sign Out
-              </button>
-            </div>
-          ) : (
-            <button
-              onClick={openClearanceModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] bg-[#001A10] text-[#FFFFFF] text-xs font-mono font-medium hover:bg-[#002819] transition-all shadow-none"
-            >
-              <Lock className="h-3 w-3 text-[#3ECF8E]" />
-              <span className="hidden sm:inline">NDRF Login</span>
-              <span className="sm:hidden">Login</span>
-            </button>
-          )}
-
           {/* Language Pill */}
           <div className="inline-flex rounded-[8px] border border-[rgba(0,26,16,0.12)] bg-[#F8F3EF] p-0.5 text-xs font-mono">
             <button
@@ -162,6 +138,31 @@ export default function Header({ locale }: HeaderProps) {
               हिन्दी
             </button>
           </div>
+
+          {/* NDRF Login Button / Authenticated Badge - Positioned to the right of Language Selector */}
+          {isAuthenticated ? (
+            <div className="inline-flex items-center gap-2 px-2.5 py-1 rounded-[8px] border border-[#6DD9A8] bg-[#A9F1CA]/30 text-xs font-mono text-[#00482F]">
+              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
+              <span className="font-semibold hidden lg:inline">{user?.name || '8th Bn NDRF'}</span>
+              <span className="font-semibold lg:hidden">8th Bn NDRF</span>
+              <button
+                onClick={logout}
+                title="Revoke clearance and return to Citizen View"
+                className="ml-1 text-[11px] text-[#001A10]/60 hover:text-rose-600 underline font-sans"
+              >
+                Sign Out
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={openClearanceModal}
+              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[#6DD9A8] bg-white hover:bg-[#A9F1CA]/20 text-[#00482F] text-xs font-mono font-semibold transition-all shadow-sm"
+            >
+              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
+              <span className="hidden sm:inline">NDRF Login</span>
+              <span className="sm:hidden">Login</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -186,7 +187,7 @@ export default function Header({ locale }: HeaderProps) {
         <Link
           href={`/${locale}/dashboard`}
           className={`px-2.5 py-1 rounded-[6px] whitespace-nowrap flex items-center gap-1 ${
-            isActive('/dashboard') ? 'bg-[#001A10] text-white font-medium' : 'text-[#001A10]/70'
+            isActive('/dashboard') ? 'bg-[#3ECF8E] text-[#001A10] font-medium' : 'text-[#001A10]/70'
           }`}
         >
           {!isAuthenticated && <Lock className="h-3 w-3 opacity-50" />}
