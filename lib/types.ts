@@ -118,6 +118,7 @@ export interface PreDisasterEntry {
   actualExitTime?: string;
   status: 'inside_zone' | 'exited' | 'overdue';
   members: string[];
+  dangerZones: string[];
 }
 
 export interface FieldSighting {

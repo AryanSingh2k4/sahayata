@@ -100,13 +100,38 @@ export const sahayataStore = {
   },
 
   // Pre-Disaster Checkpoint Registration
-  addPreDisasterEntry: (entry: Omit<PreDisasterEntry, 'id' | 'entryTime' | 'status'>) => {
+  addPreDisasterEntry: async (entry: Omit<PreDisasterEntry, 'id' | 'entryTime' | 'status'>) => {
     const newEntry: PreDisasterEntry = {
       ...entry,
       id: `MAN-2026-${Math.floor(100 + Math.random() * 900)}`,
       entryTime: new Date().toISOString(),
       status: 'inside_zone'
     };
+
+    // Persist to Supabase (cross-device sync)
+    try {
+      const { supabase } = await import('./supabaseClient');
+      await supabase.from('pre_disaster_entries').insert({
+        id:                 newEntry.id,
+        group_name:         newEntry.groupName,
+        group_type:         newEntry.groupType,
+        leader_name:        newEntry.leaderName,
+        leader_phone:       newEntry.leaderPhone,
+        total_members:      newEntry.totalMembers,
+        permit_number:      newEntry.permitNumber,
+        vehicle_number:     newEntry.vehicleNumber,
+        entry_checkpoint:   newEntry.entryCheckpoint,
+        exit_checkpoint:    newEntry.exitCheckpoint,
+        entry_time:         newEntry.entryTime,
+        expected_exit_time: newEntry.expectedExitTime,
+        status:             newEntry.status,
+        members:            newEntry.members,
+        danger_zones:       newEntry.dangerZones,
+      });
+    } catch (e) {
+      console.warn('Supabase write failed, entry saved locally only:', e);
+    }
+
     currentState = {
       ...currentState,
       preDisasterEntries: [newEntry, ...currentState.preDisasterEntries]

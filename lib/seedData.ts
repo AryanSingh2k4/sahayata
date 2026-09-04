@@ -38,6 +38,7 @@ export const INITIAL_PRE_DISASTER_ENTRIES: PreDisasterEntry[] = [
     entryTime: '2026-08-28T07:15:00Z',
     expectedExitTime: '2026-08-28T17:00:00Z',
     status: 'overdue',
+    dangerZones: ['Bhotekoshi River Gorge', 'Tatopani Flood Plain'],
     members: [
       'Dr. Milind Chitley',
       'Dr. Janhavi Chitley',
@@ -63,6 +64,7 @@ export const INITIAL_PRE_DISASTER_ENTRIES: PreDisasterEntry[] = [
     entryTime: '2026-08-28T08:00:00Z',
     expectedExitTime: '2026-08-28T18:00:00Z',
     status: 'inside_zone',
+    dangerZones: [],
     members: ['Karan Mehra', 'Vikram Rathore', 'Priya Sethi']
   }
 ];
