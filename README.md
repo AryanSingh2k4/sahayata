@@ -87,7 +87,7 @@ During major natural disasters in mountainous or riverine corridors (such as Ked
 
 ### 1. Clone the Repository
 ```bash
-git clone https://github.com/your-username/sahayata.git
+git clone https://github.com/AryanSingh2k4/sahayata.git
 cd sahayata
 ```
 

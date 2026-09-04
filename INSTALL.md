@@ -25,12 +25,12 @@ Before cloning, verify that you have the following software installed:
 Open your terminal (PowerShell / Command Prompt on Windows, Terminal on macOS / Linux) and run:
 
 ```bash
-git clone https://github.com/your-username/Sahayata.git
+git clone https://github.com/AryanSingh2k4/sahayata.git
 ```
 
 ### Step 2: Navigate into the Project Directory
 ```bash
-cd Sahayata
+cd sahayata
 ```
 
 ### Step 3: Install Node Dependencies
