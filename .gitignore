@@ -1,0 +1,74 @@
+# ==============================================
+# SAHAYATA — Production Leak-Proof .gitignore
+# ==============================================
+
+# 1. Dependency Directories
+node_modules/
+/.pnp
+.pnp.js
+
+# 2. Environment Variables & Secret Credentials (NEVER COMMIT)
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+*.env.*
+!.env.example
+
+# Security Keys, Certificates & Tokens
+*.pem
+*.key
+*.cert
+*.crt
+*.pfx
+*.p12
+credentials.json
+service-account*.json
+token.json
+
+# 3. Next.js Build Outputs & Cache
+.next/
+out/
+build/
+dist/
+.vercel/
+
+# 4. Logs & Debugging
+logs/
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# 5. Diagnostic & Local Test Artifacts
+scratch/
+screenshots/
+test_results.json
+coverage/
+.nyc_output/
+
+# 6. TypeScript Cache
+*.tsbuildinfo
+
+# 7. Operating System Artifacts
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# 8. IDE & Editor Directories
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+*.sublime-project
+*.sublime-workspace
