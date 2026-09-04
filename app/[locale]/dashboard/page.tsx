@@ -181,7 +181,7 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
             onClick={openClearanceModal}
             className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-[6px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs hover:bg-[#6DD9A8] transition-all whitespace-nowrap shadow-none"
           >
-            <span>Authenticate with Supabase</span>
+            <span>Authenticate Officer Clearance</span>
             <ArrowRight className="h-3.5 w-3.5" />
           </button>
         </div>
