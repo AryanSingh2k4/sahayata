@@ -129,10 +129,9 @@ export default function ClearanceGate({
           <button
             type="submit"
             disabled={submitting || isLoading}
-            className="w-full py-2.5 px-4 rounded-[8px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs sm:text-sm hover:bg-[#6DD9A8] transition-all disabled:opacity-50 flex items-center justify-center gap-2"
+            className="w-full py-2.5 px-4 rounded-[8px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs sm:text-sm hover:bg-[#6DD9A8] transition-all disabled:opacity-50 flex items-center justify-center"
           >
-            <Shield className="h-4 w-4 text-[#001A10]" />
-            <span>{submitting ? 'Authenticating...' : 'Sign In with Email'}</span>
+            <span>{submitting ? 'Signing in...' : 'Sign In'}</span>
           </button>
         </form>
 

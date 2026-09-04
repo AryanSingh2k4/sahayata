@@ -135,10 +135,9 @@ export default function ClearanceModal() {
             <button
               type="submit"
               disabled={submitting || isLoading}
-              className="flex-1 py-2 px-3 rounded-[6px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs hover:bg-[#6DD9A8] transition-all disabled:opacity-50 flex items-center justify-center gap-1.5"
+              className="flex-1 py-2 px-3 rounded-[6px] bg-[#3ECF8E] text-[#001A10] font-semibold text-xs hover:bg-[#6DD9A8] transition-all disabled:opacity-50 flex items-center justify-center"
             >
-              <Shield className="h-3.5 w-3.5 text-[#001A10]" />
-              <span>{submitting ? 'Signing in...' : 'Sign In with Email'}</span>
+              <span>{submitting ? 'Signing in...' : 'Sign In'}</span>
             </button>
           </div>
         </form>

@@ -142,10 +142,9 @@ export default function AuthorityDashboard({ params: { locale } }: DashboardProp
           {!isAuthenticated && (
             <button
               onClick={openClearanceModal}
-              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-[8px] border border-[#6DD9A8] bg-white hover:bg-[#A9F1CA]/20 text-[#00482F] text-xs font-medium transition-all shadow-sm"
+              className="inline-flex items-center px-3.5 py-2 rounded-[8px] border border-[#6DD9A8] bg-white hover:bg-[#A9F1CA]/20 text-[#00482F] text-xs font-medium transition-all shadow-sm"
             >
-              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
-              <span>NDRF Officer Login</span>
+              <span>Sign In</span>
             </button>
           )}
           <button

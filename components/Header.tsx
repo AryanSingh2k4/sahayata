@@ -156,11 +156,9 @@ export default function Header({ locale }: HeaderProps) {
           ) : (
             <button
               onClick={openClearanceModal}
-              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-[8px] border border-[#6DD9A8] bg-white hover:bg-[#A9F1CA]/20 text-[#00482F] text-xs font-mono font-semibold transition-all shadow-sm"
+              className="inline-flex items-center px-3.5 py-1.5 rounded-[8px] border border-[#6DD9A8] bg-white hover:bg-[#A9F1CA]/20 text-[#00482F] text-xs font-mono font-semibold transition-all shadow-sm"
             >
-              <Shield className="h-3.5 w-3.5 text-[#00A85A]" />
-              <span className="hidden sm:inline">NDRF Login</span>
-              <span className="sm:hidden">Login</span>
+              <span>Sign In</span>
             </button>
           )}
         </div>
