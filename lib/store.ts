@@ -102,7 +102,8 @@ export const sahayataStore = {
             expectedExitTime: e.expected_exit_time,
             actualExitTime: e.actual_exit_time,
             status: e.status,
-            members: e.members || []
+            members: e.members || [],
+            dangerZones: e.danger_zones || []
           }));
 
           const existingIds = new Set(mappedEntries.map(e => e.id));
@@ -191,13 +192,20 @@ export const sahayataStore = {
       ...entry,
       id: `MAN-2026-${Math.floor(100 + Math.random() * 900)}`,
       entryTime: new Date().toISOString(),
-      status: 'inside_zone'
+      status: 'inside_zone',
+      dangerZones: entry.dangerZones || []
     };
+
+    // Update local state immediately for instant responsive UI
+    currentState = {
+      ...currentState,
+      preDisasterEntries: [newEntry, ...currentState.preDisasterEntries]
+    };
+    notify();
 
     // Persist to Supabase (cross-device sync)
     try {
-      const { supabase } = await import('./supabaseClient');
-      await supabase.from('pre_disaster_entries').insert({
+      const { error } = await supabase.from('pre_disaster_entries').insert({
         id:                 newEntry.id,
         group_name:         newEntry.groupName,
         group_type:         newEntry.groupType,
@@ -214,36 +222,10 @@ export const sahayataStore = {
         members:            newEntry.members,
         danger_zones:       newEntry.dangerZones,
       });
+      if (error) console.warn('Supabase pre-disaster insert note:', error.message);
     } catch (e) {
       console.warn('Supabase write failed, entry saved locally only:', e);
     }
-
-    currentState = {
-      ...currentState,
-      preDisasterEntries: [newEntry, ...currentState.preDisasterEntries]
-    };
-    notify();
-
-    // Async Cloud Sync to Supabase
-    supabase.from('pre_disaster_entries').insert({
-      id: newEntry.id,
-      group_name: newEntry.groupName,
-      group_type: newEntry.groupType,
-      leader_name: newEntry.leaderName,
-      leader_phone: newEntry.leaderPhone,
-      total_members: newEntry.totalMembers,
-      permit_number: newEntry.permitNumber,
-      vehicle_number: newEntry.vehicleNumber,
-      entry_checkpoint: newEntry.entryCheckpoint,
-      exit_checkpoint: newEntry.exitCheckpoint,
-      entry_time: newEntry.entryTime,
-      expected_exit_time: newEntry.expectedExitTime,
-      status: newEntry.status,
-      members: newEntry.members,
-      danger_zones: []
-    }).then(({ error }) => {
-      if (error) console.warn('Supabase pre-disaster insert note:', error.message);
-    });
 
     return newEntry;
   },
